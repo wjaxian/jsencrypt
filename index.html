@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>jsencrypt-demo</title>
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vue@2.6.10/dist/vue.js"></script>
+	<script src="./bin/jsencrypt.min.js" type="text/javascript"></script>
+	<script type="text/javascript" src="bin/sec.js"></script>
+	<script type="text/javascript" src="bin/jsencrypt_handle.js"></script>
+	<style type="text/css">
+		* {
+			margin: 0;
+			padding: 0;
+			font-size: 16px;
+		}
+		#warp {
+			width: 900px;
+			margin: 0 auto;
+			padding: 30px 0;
+		}
+		.tab-box {
+			display: flex;
+		}
+		.tab-box .tab-item {
+			width: 100px;
+			line-height: 40px;
+			text-align: center;
+			border: 1px solid #ddd;
+			background: #ccc;
+			color: black;
+			cursor: pointer;
+		}
+		.tab-box .tab-item.on {
+			background: red;
+			border: 1px solid red;
+			color: white;
+		}
+		textarea {
+			min-width: 100%;
+			max-width: 100%;
+			min-height: 200px;
+			padding: 10px;
+		}
+		p {
+			line-height: 40px;
+		}
+		button {
+			width: 120px;
+			height: 40px;
+			cursor: pointer;
+		}
+		.green {
+			color: green;
+		}
+		.red {
+			color: red;
+		}
+		.result {
+			word-wrap: break-word;
+		}
+	</style>
+</head>
+<body>
+	<div id="warp">
+		<div class="tab-box">
+			<div class="tab-item" @click="tabHandle('encryption')" :class="{on: tabStatus == 'encryption'}">加密</div>
+			<div class="tab-item" @click="tabHandle('decrypt')" :class="{on: tabStatus == 'decrypt'}">解密</div>
+		</div>
+		<div class="tab-content">
+			<p>{{descContent.secretKeyDesc}}</p>
+			<textarea class="key" v-model="key" :placeholder="'请输入'+descContent.secretKeyDesc"></textarea>
+			<p>{{descContent.handleContent}}</p>
+			<textarea class="str" v-model="handleContent" :placeholder="'请输入'+descContent.handleContent"></textarea>
+			<button @click="implement(this.vm)">执行</button>
+			<p>执行结果：</p>
+			<div class="result" :class="resultClass">
+				{{result}}
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+			//公钥
+		var enKey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCXLGPbI3Rj0p+zmpcmCOfcXlw2L7TmAvny5GDsdcPZG5pr1WlAC/Hzr0OTZMV7WSZNj7IKiumHqoCw5g0+Ue5p1c0I8HPzbeZg+g7tpn1vfo9CI4wEK44Pxgo9+MBvGnE/1jTcGxQRWV/tkFtYLQSu3kOpb1qqLQ5B61TeQPOpEwIDAQAB',
+			//私钥
+          	deKey = 'MIICeAIBADANBgkqhkiG9w0BAQEFAASCAmIwggJeAgEAAoGBAJcsY9sjdGPSn7OalyYI59xeXDYvtOYC+fLkYOx1w9kbmmvVaUAL8fOvQ5NkxXtZJk2PsgqK6YeqgLDmDT5R7mnVzQjwc/Nt5mD6Du2mfW9+j0IjjAQrjg/GCj34wG8acT/WNNwbFBFZX+2QW1gtBK7eQ6lvWqotDkHrVN5A86kTAgMBAAECgYBBWAaxqlmc7GXrlF7RKfhO4Nqq8WQYKCEyRFVA4IaPScct5UlhTch/tLpY864I6zgLPpmOxQy8f46w6D/BOFj86/C629DGfMWx6yFspgzEPMFZ8R7Z182RIYJnP7PnM40h+qyq1mIv2ck1KfGDWZU9n+SoamBBKWclCvQmgjOJQQJBANFFbVx4hgjkiQYbNOfmgl0Ni5/wbZFFF6cxSort7Z+mASUQm1pFb9QPea08qLDOyduBhHJZCdOC+LUgCAiOJF0CQQC47erYfGHr8irL8TF7xnnzHU49sL6Fr5786KHcMJKeZYv6Y8BT9NG0zZtCj/9qoyQUKTxZP/xeGJD7kEcpVywvAkEAwg/l2EiT0w9K2fTE3P/viCcVgZ3NnVc7FfoprCfzoYaprRt3VQDrMPWg2jtUG5HHstyqW/ehmxjrVdt8V6KoqQJBAKf6pRokUaZLAQjje/lcniVxd0KeK1Gv5xEAFxa1oFj1EKNOvMMGXP6IzQE3X+Dzc7BEjKbdclXepsN7mMg6gM0CQQCBeZi8ysPJOmb9mBKM0GPLupSfSoWCmBl2O6t8LFsWrllOaVxfhIj8xwSuh1tpGKxkXa4OZUjLMh35uxkt6qSf',
+          	//加密字符串
+          	str = JSON.stringify({"bankName":"农业银行","bankNumber":"6228480320805862010","bankPhone":"13868112689","identityCard":"432503198203244035","realName":"张三","userId":"3"})
+
+		window.vm = new Vue({
+			el: '#warp',
+			data: function() {
+				return {
+					tabStatus: 'encryption',
+					key: enKey,
+					handleContent: str,
+					result: ''
+				}
+			},
+			computed: {
+				status: function() {
+					return this.tabStatus === 'encryption'
+				},
+				descContent: function() {
+					return {
+						secretKeyDesc: this.status && '公钥' || '私钥',
+						handleContent: this.status && '加密的字符串' || '解密的签名'
+					}
+				},
+				resultClass () {
+					var result = Object.prototype.toString.call(this.result)
+					return (result === '[object String]' || result === '[object Object]') && 'green' || 'red'
+				}
+			},
+			methods: {
+				checkField: function(data) {
+					var key = data.key,
+						handleContent = data.handleContent,
+						descContent = this.descContent;
+					return {
+						message: [!key && '请输入'+descContent.secretKeyDesc || !0, !handleContent && '请输入'+descContent.handleContent || !0],
+						key: key,
+						handleContent: handleContent
+					}
+				},
+				tabHandle: function(status) {
+					this.tabStatus = status
+					this.key = this.status && enKey || deKey
+					this.handleContent = this.status && str || this.result
+					this.result = ''
+				},
+				implement: function(data) {
+					var checkResult = this.checkField(data)
+					for (var i = 0; i < checkResult.message.length; i++) {
+						if (checkResult.message[i] !== true) {
+							return alert(checkResult.message[i])
+						}
+					}
+
+					try {
+						this.result = this.status && this.$getLongCode(checkResult.key, checkResult.handleContent) || this.$deLongCode(checkResult.key, checkResult.handleContent)
+					} catch (e) {
+						this.result = e
+					}
+				}
+			}
+		})
+	</script>
+</body>
+</html>
