@@ -1,2 +1,2 @@
 # Website
-[http://docs.wujiabk.com/jsencrypt/](https://wjaxian.github.io/jsencrypt/)
+[Demo](https://wjaxian.github.io/jsencrypt/)
